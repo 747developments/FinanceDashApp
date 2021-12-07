@@ -1,0 +1,18 @@
+Transaction,Account,Category,Date,Rate,Comment
+30000,Bank1,Salary,2019-01-15,1.0,Company
+30000,Bank1,Salary,2019-02-15,1.0,Company
+30000,Bank1,Salary,2019-03-15,1.0,Company
+2000,Cash,Other,2019-02-03,1.0,Extra Activity
+30000,Bank1,Salary,2019-04-15,1.0,Company
+30000,Bank1,Salary,2019-05-15,1.0,Company
+2000,Cash,Other,2019-05-03,1.0,Extra Activity
+30000,Bank1,Salary,2019-06-15,1.0,Company
+30000,Bank1,Salary,2019-07-15,1.0,Company
+5000,Cash,Other,2019-07-03,1.0,Extra Activity
+30000,Bank1,Salary,2019-08-15,1.0,Company
+30000,Bank1,Salary,2019-09-15,1.0,Company
+3000,Bank2,Other,2019-10-03,1.0,Extra Activity
+150,Bank1_USD,Other,2019-10-15,23.5,Gift
+31000,Bank1,Salary,2019-10-15,1.0,Company
+31000,Bank1,Salary,2019-11-15,1.0,Company
+31000,Bank1,Salary,2019-12-15,1.0,Company

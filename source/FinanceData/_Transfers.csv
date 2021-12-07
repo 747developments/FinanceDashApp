@@ -1,0 +1,12 @@
+Transfer from,Transfer to,Amount,Date,Note,Rate
+Bank1,Bank2,3000,2019-01-16,Transfer,1.0
+Bank1,Bank1_USD,3000,2019-01-17,Transfer,23.0
+Bank1,Bank1_EUR,3000,2019-01-17,Transfer,26.1
+DisabledBank,Bank2,10000,2019-01-26,Account Cancel,1.0
+Bank1,Bank2,1000,2019-05-26,Transfer,1.0
+Bank1,Bank2,1500,2019-06-16,Transfer,1.0
+Bank1,Cash,5000,2019-07-19,Withdraw,1.0
+Bank1,Bank2,1300,2019-09-20,Transfer,1.0
+Bank1,Cash,5000,2019-08-12,Withdraw,1.0
+Bank1,Bank2,15000,2019-10-13,Transfer,1.0
+Bank1,Cash,10000,2019-11-10,Withdraw,1.0

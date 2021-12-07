@@ -1,0 +1,9 @@
+Account,Initial Balance,Currency,Active
+Bank1,80000.0,CZK,Yes
+Bank2,20000,CZK,Yes
+Cash,10000,CZK,Yes
+DisabledBank,10000,CZK,No
+Bank1_USD,0,USD,Yes
+Bank1_EUR,0,EUR,Yes
+Cash_USD,0,USD,Yes
+PayPal,0,USD,Yes
