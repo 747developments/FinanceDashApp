@@ -12,16 +12,33 @@ def displayDesiredBalance(rows, derived_virtual_selected_rows, dataframe, curren
     else:
         dff = pd.DataFrame(rows)
 
+    allReturn = []
+    #allReturn = ''.join(str(x) for x in allReturn)
     ### Compute statistics from selected range of data
     if not dff.empty:
         if len(derived_virtual_selected_rows):
-            totalBalance = dff['Actual Balance'].iloc[derived_virtual_selected_rows].sum()
+            totalBalance = dff['Balance in main currency'].iloc[derived_virtual_selected_rows].sum()            
+            uniqueCurrencies = dff['Currency'].iloc[derived_virtual_selected_rows].unique()
+            for cur in uniqueCurrencies:
+                testBalance = dff.iloc[derived_virtual_selected_rows]
+                testBalance = testBalance[testBalance['Currency'] == cur].sum()
+                #tmpBalance = tmpBalance['Actual Balance']
+                #tmpBalance = dff[dff['Currency'] == cur].iloc[derived_virtual_selected_rows].sum()
+                #print(tmpBalance['Actual Balance'])
+                tmpBalance = testBalance['Balance']
+                #print(cur, ' ', tmpBalance)
+                newReturn = html.Div([('Selected ' + cur + ' balance: ' + '{:,.2f}'.format(tmpBalance) + ' ' + cur), html.Br()])
+                allReturn.append(('Selected ' + cur + ' balance: ' + '{:,.2f}'.format(tmpBalance) + ' ' + cur))
+                #allReturn = ''.join(str(x) for x in allReturn)
         else:            
-            totalBalance = round(dff['Actual Balance'].sum(),2)                
+            totalBalance = round(dff['Balance in main currency'].sum(),2)                
     else:
         totalBalance = 0.00
         
-    toReturn = ('Total ' + currency + ' balance: ' + '{:,.2f}'.format(totalBalance) + ' ' + currency)
+    
+    allReturn.append(('Total selected ' + currency + ' balance in main currency: ' + '{:,.2f}'.format(totalBalance) + ' ' + currency))
+    allReturn = pd.DataFrame(allReturn, columns = ['Divs'])
+    toReturn = html.Div([html.Strong(col) if 'Total' in col else html.P(col) for col in allReturn.Divs])
     return toReturn
 
 def createCategoryDatatable(tableID, dataframe):
@@ -63,6 +80,7 @@ def createCategoryDatatable(tableID, dataframe):
     ])
 
 def createAccountDatatable(tableID, dataframe):
+   
     return html.Div([
         dash_table.DataTable(
         id=tableID,
@@ -96,11 +114,16 @@ def createAccountDatatable(tableID, dataframe):
             'type': 'numeric',
             'format': {'specifier': ',.2f','precision':2,},
         }, {
-            'id': 'Actual Balance',
-            'name': 'Actual Balance',
+            'id': 'Balance',
+            'name': 'Balance',
             'type': 'numeric',
             'format': {'specifier': ',.2f','precision':2,},
-        }, 
+        }, {
+            'id': 'Balance in main currency',
+            'name': 'Balance in main currency',
+            'type': 'numeric',
+            'format': {'specifier': ',.2f','precision':2,},
+        },
         ],
                   
         data=dataframe.to_dict('records'),
@@ -128,8 +151,8 @@ def createAccountDatatable(tableID, dataframe):
             {'if': {'column_id': 'Currency'},
                  'width': '7%', 'textAlign': 'left'},
              ] + [ 
-            {'if': {'column_id': c}, 'width': '15%'} 
-                for c in ['Transfers', 'Incomes', 'Expenses', 'Actual Balance']           
+            {'if': {'column_id': c}, 'width': '12%'} 
+                for c in ['Transfers', 'Incomes', 'Expenses', 'Balance', 'Balance in main currency']           
         ], 
                          
         ),
@@ -174,7 +197,7 @@ def createIncExpDataTable(tableID, dataframe):
             'format': {'specifier': ',.2f','precision':2,},
         },
         ],
-                  
+           
         data=dataframe.to_dict('records'),
       
         editable=False,

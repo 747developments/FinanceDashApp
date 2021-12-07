@@ -1,6 +1,6 @@
 __author__ = "Radek Reznicek - 747 Developments"
 __copyright__ = "Copyright 2020"
-__version__ = "1.0"
+__version__ = "1.1"
 __email__ = "747developments@gmail.com"
 
 ################################################################################
@@ -96,12 +96,14 @@ ExpensesDf[['Transaction', 'Rate']] = ExpensesDf[['Transaction', 'Rate']].astype
 ExpensesDf['Transact'+MainCurrency] = ExpensesDf['Transaction'] * ExpensesDf['Rate']
 ExpensesDf['Date'] = pd.to_datetime(ExpensesDf['Date'], format=DATE_FORMAT)
 ExpensesDf = ExpensesDf.sort_values('Date')
+ExpensesDf = ExpensesDf.fillna('-')
 
 IncomesDf['Date'] = pd.to_datetime(IncomesDf['Date'], format=DATE_FORMAT)
 IncomesDf.fillna(value=values, inplace=True)
 IncomesDf[['Transaction', 'Rate']] = IncomesDf[['Transaction', 'Rate']].astype(float)
 IncomesDf['Transact'+MainCurrency] = IncomesDf['Transaction'] * IncomesDf['Rate']
 IncomesDf = IncomesDf.sort_values('Date')
+IncomesDf = IncomesDf.fillna('-')
 
 TransfersDf['Date'] = pd.to_datetime(TransfersDf['Date'], format=DATE_FORMAT)
 TransfersDf.fillna(value=values, inplace=True)
@@ -133,14 +135,15 @@ for acc in range(0, len(InitialAccounts['Account'])):
     tmpExpense = round(tmpExpense, 2)
     tmpInitial = round(tmpInitial, 2)
     tmpActual = round(tmpActual, 2)
-    allAccountsList.append([InitialAccounts['Account'][acc],InitialAccounts['Currency'][acc],tmpActive,tmpTransfer,tmpIncome,tmpExpense, tmpActual])
+    tmpInCurrency = round(tmpActual*EXCHANGE_RATES.get(InitialAccounts['Currency'][acc]), 2)
+    allAccountsList.append([InitialAccounts['Account'][acc],InitialAccounts['Currency'][acc],tmpActive,tmpTransfer,tmpIncome,tmpExpense, tmpActual, tmpInCurrency])
         
 # format created tables to dataframes
-columnsForAccounts=['Account','Currency','Active','Transfers','Incomes','Expenses','Actual Balance']
+columnsForAccounts=['Account','Currency','Active','Transfers','Incomes','Expenses','Balance','Balance in main currency']
 allDfAccounts = pd.DataFrame(allAccountsList, columns = columnsForAccounts)
 
 # Calucualte sum of balances for each currency (or each set category of holdings)
-totalBalance = allDfAccounts['Actual Balance'].sum()
+totalBalance = allDfAccounts['Balance'].sum()
 
 ### placeholder for callback
 categoryDfEmpty = pd.DataFrame(columns=['Category', 'Amount'])
@@ -267,7 +270,8 @@ def updateTable1Tab1(filter_query, sort_by, page_current, page_size):
      Input('dataTable1Tab1', "derived_virtual_selected_rows"),
     ]
 )
-def updateContainer1Tab2(rows, derived_virtual_selected_rows):      
+def updateContainer1Tab1(rows, derived_virtual_selected_rows):
+     
     return FinanceDashFunctions.displayDesiredBalance(rows, derived_virtual_selected_rows, allDfAccounts, MainCurrency)
 
 ###############################################################################
