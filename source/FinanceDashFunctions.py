@@ -1,6 +1,6 @@
-import dash_table
+from dash import dash_table
 import pandas as pd
-import dash_html_components as html
+from dash import html
 
 def displayDesiredBalance(rows, derived_virtual_selected_rows, dataframe, currency):
         ### the selectino for the checkboxes in datatable

@@ -1,4 +1,4 @@
-import dash_core_components as dcc
+from dash import dcc
 import dev_747_styles
 
 def graphStyle(graphTitle, graphHeight, colorMode, barmode = ''):

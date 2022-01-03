@@ -1,14 +1,14 @@
 __author__ = "Radek Reznicek - 747 Developments"
 __copyright__ = "Copyright 2020"
-__version__ = "1.1"
+__version__ = "1.2"
 __email__ = "747developments@gmail.com"
 
 ################################################################################
 ## Import libraries
 ################################################################################ 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import plotly.graph_objs as go
 import pandas as pd
 from dash.dependencies import Input, Output
@@ -51,10 +51,10 @@ actualYear = dt.today().year
 try:
     
     if('XLS' in DATA_SOURCE):
-        InitialAccounts = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Initial')
-        ExpensesDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Expenses')
-        IncomesDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Incomes')
-        TransfersDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Transfers')
+        InitialAccounts = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Initial', engine='openpyxl')
+        ExpensesDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Expenses', engine='openpyxl')
+        IncomesDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Incomes', engine='openpyxl')
+        TransfersDf = pd.read_excel('FinanceData/_AllFinanceData.xlsx', sheet_name='Transfers', engine='openpyxl')
     
     else:
         InitialAccounts = pd.read_csv("FinanceData/_Initial.csv", sep=',')
@@ -124,11 +124,11 @@ allAccountsList = []
 # in this for cycle calculate actual balance for every accout
 for acc in range(0, len(InitialAccounts['Account'])):
         
-    tmpTransfer = TransfersDf[TransfersDf["Transfer to"] == InitialAccounts['Account'][acc]].sum().fillna(0)["CurrencyTo"] - TransfersDf[TransfersDf["Transfer from"] == uniqueAccountDf[acc]].sum().fillna(0)["Amount"]
-    tmpIncome = IncomesDf[IncomesDf["Account"] == InitialAccounts['Account'][acc]].sum().fillna(0)["Transaction"]
-    tmpExpense = ExpensesDf[ExpensesDf["Account"] == InitialAccounts['Account'][acc]].sum().fillna(0)["Transaction"]
-    tmpInitial = InitialAccounts[InitialAccounts["Account"] == InitialAccounts['Account'][acc]].sum().fillna(0)["Initial Balance"]
-    tmpActive = InitialAccounts[InitialAccounts["Account"] == InitialAccounts['Account'][acc]]["Active"].values[0]
+    tmpTransfer = TransfersDf[TransfersDf["Transfer to"] == InitialAccounts["Account"][acc]].fillna(0)["CurrencyTo"].sum() - TransfersDf[TransfersDf["Transfer from"] == uniqueAccountDf[acc]].fillna(0)["Amount"].sum()
+    tmpIncome = IncomesDf[IncomesDf["Account"] == InitialAccounts["Account"][acc]].fillna(0)["Transaction"].sum()
+    tmpExpense = ExpensesDf[ExpensesDf["Account"] == InitialAccounts["Account"][acc]].fillna(0)["Transaction"].sum()
+    tmpInitial = InitialAccounts[InitialAccounts["Account"] == InitialAccounts["Account"][acc]].fillna(0)["Initial Balance"].sum()
+    tmpActive = InitialAccounts[InitialAccounts["Account"] == InitialAccounts["Account"][acc]]["Active"].values[0]
     tmpActual = tmpInitial + tmpExpense + tmpIncome + tmpTransfer
     tmpTransfer = round(tmpTransfer, 2)
     tmpIncome = round(tmpIncome, 2)
@@ -241,25 +241,19 @@ app.layout = html.Div(children=[
 ###############################################################################
 @app.callback(
     
-     Output('dataTable1Tab1', 'data'),
-    
+     Output('dataTable1Tab1', 'children'),    
     [
-     Input('dataTable1Tab1', 'filter_query'),
-     Input('dataTable1Tab1', 'sort_by'),
-     Input('dataTable1Tab1', 'page_current'),
-     Input('dataTable1Tab1', 'page_size'),
+     Input('dataTable1Tab1', 'derived_virtual_selected_rows'),
     ]
 )
-def updateTable1Tab1(filter_query, sort_by, page_current, page_size):
+def updateTable1Tab1(derived_virtual_selected_rows):
     
     dff = allDfAccounts.copy() 
-    ### table filter data
-    if not dff.empty:
-        dff = dev_747_DashDatatableFunc.tableFilter(dff, filter_query)
-    ### table filter data
-    if not dff.empty:
-        dff = dev_747_DashDatatableFunc.tableSortData(dff, sort_by, page_current, page_size)
-           
+    
+    ### the selectino for the checkboxes in datatable
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+                   
     return dff.to_dict('records')      
 
 ### Callback for container with graphs and summary
@@ -560,17 +554,16 @@ def updateTab3(dateFrom, dateTo):
      Input('datePickerTo', 'value'),
      Input('dataTable1Tab4', 'filter_query'),
      Input('dataTable1Tab4', 'sort_by'),
-     Input('dataTable1Tab1', 'page_current'),
-     Input('dataTable1Tab1', 'page_size'),
+     Input('dataTable1Tab4', 'derived_virtual_selected_rows'),
     ]
 )
-def updateExpensesTab4(dateFrom, dateTo, filter_query, sort_by, page_current, page_size):
+def updateExpensesTab4(dateFrom, dateTo, filter_query, sort_by, derived_virtual_selected_rows):
 
     dff = ExpensesDf.copy()
-   
+    
     dff.rename(columns={'Transact'+MainCurrency: 'Amount '+MainCurrency}, inplace=True)
     dff['Amount '+MainCurrency] = -dff['Amount '+MainCurrency] 
-    
+        
     dff = dff.sort_values('Date', ascending=False)
 
     dff.reset_index(inplace=True, drop=True)
@@ -578,18 +571,30 @@ def updateExpensesTab4(dateFrom, dateTo, filter_query, sort_by, page_current, pa
     ### table filter data
     if not dff.empty:
         dff = dev_747_DashDatatableFunc.tableFilter(dff, filter_query)
-    ### table filter data
-    if not dff.empty:
-        dff = dev_747_DashDatatableFunc.tableSortData(dff, sort_by, page_current, page_size)
+    
     if not dff.empty:
         dff = dev_747_DashDatatableFunc.tableDateFilter(dff, dateFrom, 'Date', '>=')   
         dff = dev_747_DashDatatableFunc.tableDateFilter(dff, dateTo, 'Date', '<=') 
     
-    expenseTotalSum = dff['Amount '+MainCurrency].sum()
+    ### the selectino for the checkboxes in datatable
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+        
+    expensesTotalSum = 0.0
     
-    divToReturn = ('Total selected expenses: ' + '{:,.2f}'.format(expenseTotalSum) + ' ' + MainCurrency)
+    if len(derived_virtual_selected_rows):
+        for i in range(len(dff)):
+            if i in derived_virtual_selected_rows:
+                expensesTotalSum += dff['Amount '+MainCurrency].values[i] 
+    
+    else:
+        expensesTotalSum = dff['Amount '+MainCurrency].sum()
+        
+    #incomesTotalSum = dff['Amount '+MainCurrency].sum()
+    
+    divToReturn = ('Total selected expenses: ' + '{:,.2f}'.format(expensesTotalSum) + ' ' + MainCurrency)
 
-    return divToReturn, dff.to_dict('records')
+    return divToReturn, dff.to_dict('records') 
 
 @app.callback(  
     [
@@ -601,11 +606,10 @@ def updateExpensesTab4(dateFrom, dateTo, filter_query, sort_by, page_current, pa
      Input('datePickerTo', 'value'),
      Input('dataTable2Tab4', 'filter_query'),
      Input('dataTable2Tab4', 'sort_by'),
-     Input('dataTable1Tab1', 'page_current'),
-     Input('dataTable1Tab1', 'page_size'),
+     Input('dataTable2Tab4', 'derived_virtual_selected_rows'),
     ]
 )
-def updateIncomesTab4(dateFrom, dateTo, filter_query, sort_by, page_current, page_size):
+def updateIncomesTab4(dateFrom, dateTo, filter_query, sort_by, derived_virtual_selected_rows):
 
     dff = IncomesDf.copy()
     
@@ -618,19 +622,30 @@ def updateIncomesTab4(dateFrom, dateTo, filter_query, sort_by, page_current, pag
     ### table filter data
     if not dff.empty:
         dff = dev_747_DashDatatableFunc.tableFilter(dff, filter_query)
-    ### table filter data
-    if not dff.empty:
-        dff = dev_747_DashDatatableFunc.tableSortData(dff, sort_by, page_current, page_size)
     
     if not dff.empty:
         dff = dev_747_DashDatatableFunc.tableDateFilter(dff, dateFrom, 'Date', '>=')   
         dff = dev_747_DashDatatableFunc.tableDateFilter(dff, dateTo, 'Date', '<=') 
     
-    incomesTotalSum = dff['Amount '+MainCurrency].sum()
+    ### the selectino for the checkboxes in datatable
+    if derived_virtual_selected_rows is None:
+        derived_virtual_selected_rows = []
+        
+    incomesTotalSum = 0.0
+    
+    if len(derived_virtual_selected_rows):
+        for i in range(len(dff)):
+            if i in derived_virtual_selected_rows:
+                incomesTotalSum += dff['Amount '+MainCurrency].values[i] 
+    
+    else:
+        incomesTotalSum = dff['Amount '+MainCurrency].sum()
+        
+    #incomesTotalSum = dff['Amount '+MainCurrency].sum()
     
     divToReturn = ('Total selected incomes: ' + '{:,.2f}'.format(incomesTotalSum) + ' ' + MainCurrency)
 
-    return divToReturn, dff.to_dict('records')  
+    return divToReturn, dff.to_dict('records') 
 
 ###############################################################################
 #######################  Run Dash App               ###########################
